@@ -14,26 +14,30 @@ export default function InkAnimation() {
     canvas.height = canvas.offsetHeight * 2;
     ctx.scale(2, 2);
 
+    // 捕获为局部常量以消除闭包内的 TS null 类型歧义
+    const cvs = canvas;
+    const context = ctx;
+
     let particles: Array<{ x: number; y: number; r: number; alpha: number; vy: number }> = [];
 
     function animate() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      context.clearRect(0, 0, cvs.width, cvs.height);
       if (Math.random() < 0.1) {
         particles.push({
-          x: Math.random() * canvas.width / 2,
+          x: Math.random() * cvs.width / 2,
           y: -10,
           r: Math.random() * 30 + 10,
           alpha: Math.random() * 0.08 + 0.02,
           vy: Math.random() * 0.3 + 0.1,
         });
       }
-      particles = particles.filter((p) => p.y < canvas.height / 2 + 50);
+      particles = particles.filter((p) => p.y < cvs.height / 2 + 50);
       for (const p of particles) {
         p.y += p.vy;
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(44, 24, 16, ${p.alpha})`;
-        ctx.fill();
+        context.beginPath();
+        context.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        context.fillStyle = `rgba(44, 24, 16, ${p.alpha})`;
+        context.fill();
       }
       requestAnimationFrame(animate);
     }
