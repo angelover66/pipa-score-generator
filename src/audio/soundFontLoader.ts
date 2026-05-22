@@ -34,6 +34,8 @@ export async function loadPipaSamples(onProgress?: (percent: number) => void): P
 
     sampleCache.set(midi, buffer);
     onProgress?.(Math.round(((midi - midiRange.min) / totalNotes) * 100));
+    // 每 4 个音符 yield 主线程，避免 UI 冻结
+    if (midi % 4 === 0) await new Promise((r) => setTimeout(r, 0));
   }
 }
 

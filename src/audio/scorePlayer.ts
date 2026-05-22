@@ -30,10 +30,10 @@ export class ScorePlayer {
     this.currentMeasureIndex = 0;
   }
 
-  play(): void {
+  async play(): Promise<void> {
     if (!this.score || this.state === 'playing') return;
     const ctx = getAudioContext();
-    if (ctx.state === 'suspended') ctx.resume();
+    if (ctx.state === 'suspended') await ctx.resume();
     this.state = 'playing';
     this.callbacks.onStateChange('playing');
     this.scheduleAllNotes();
@@ -102,9 +102,9 @@ export class ScorePlayer {
     getAudioContext().suspend();
   }
 
-  resume(): void {
+  async resume(): Promise<void> {
     if (this.state !== 'paused' || !this.score) return;
-    getAudioContext().resume();
+    await getAudioContext().resume();
     this.state = 'playing';
     this.callbacks.onStateChange('playing');
     this.scheduleAllNotes();

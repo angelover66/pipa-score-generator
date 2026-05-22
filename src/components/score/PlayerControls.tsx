@@ -12,6 +12,7 @@ export default function PlayerControls({ score }: PlayerControlsProps) {
   const [progress, setProgress] = useState(0);
   const [tempo, setTempoState] = useState(score.tempo);
   const [loaded, setLoaded] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const initPlayer = useCallback(async () => {
     if (playerRef.current) return;
@@ -26,10 +27,19 @@ export default function PlayerControls({ score }: PlayerControlsProps) {
     setLoaded(true);
   }, [score]);
 
-  function handlePlay() {
-    if (!loaded) { initPlayer().then(() => playerRef.current?.play()); return; }
-    if (playerState === 'paused') playerRef.current?.resume();
-    else playerRef.current?.play();
+  async function handlePlay() {
+    if (!loaded) {
+      setLoading(true);
+      try {
+        await initPlayer();
+        await playerRef.current?.play();
+      } finally {
+        setLoading(false);
+      }
+      return;
+    }
+    if (playerState === 'paused') await playerRef.current?.resume();
+    else await playerRef.current?.play();
   }
 
   function handleStop() { playerRef.current?.stop(); }
@@ -41,9 +51,9 @@ export default function PlayerControls({ score }: PlayerControlsProps) {
 
   return (
     <div className="flex items-center gap-4 justify-center py-4">
-      <button onClick={handlePlay}
-        className="px-6 py-3 bg-vermilion text-white rounded-full hover:bg-vermilion-dark transition-colors text-lg">
-        {playerState === 'playing' ? '⏸ 暂停' : '▶ 播放'}
+      <button onClick={handlePlay} disabled={loading}
+        className="px-6 py-3 bg-vermilion text-white rounded-full hover:bg-vermilion-dark transition-colors text-lg disabled:opacity-50 disabled:cursor-wait">
+        {loading ? '⋯ 加载音色' : playerState === 'playing' ? '⏸ 暂停' : '▶ 播放'}
       </button>
       <button onClick={handleStop}
         className="px-4 py-2 border border-ink/20 rounded-lg hover:bg-rice-dark transition-colors">
