@@ -42,9 +42,8 @@ function reduceEasy(notes: PipaNote[]): PipaNote[] {
 }
 
 function reduceMedium(notes: PipaNote[]): PipaNote[] {
-  return notes
-    .filter((n) => n.duration >= 0.25)
-    .filter((n, i) => n.isStrongBeat || (i > 0 && notes[i - 1].isStrongBeat));
+  const filtered = notes.filter((n) => n.duration >= 0.25);
+  return filtered.filter((n, i) => n.isStrongBeat || (i > 0 && filtered[i - 1].isStrongBeat));
 }
 
 export function adjustTempo(originalTempo: number, difficulty: Difficulty): number {
