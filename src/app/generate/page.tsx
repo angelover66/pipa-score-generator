@@ -15,9 +15,9 @@ export default function GeneratePage() {
   const { dispatch } = useAppState();
   const [processingStep, setProcessingStep] = useState<ProcessingStep>('extracting');
   const stepRef = useRef<ProcessingStep>('extracting');
-  const setStep = (step: ProcessingStep) => {
+  const updateStep = (step: ProcessingStep) => {
     stepRef.current = step;
-    setStep(step);
+    setProcessingStep(step);
   };
   const [percent, setPercent] = useState(0);
   const [error, setError] = useState<string | null>(null);
@@ -27,7 +27,7 @@ export default function GeneratePage() {
     try {
       dispatch({ type: 'SET_STEP', payload: 'processing' });
 
-      setStep('extracting');
+      updateStep('extracting');
       setPercent(0);
       await initFFmpeg((p) => setPercent(p));
       setPercent(100);
@@ -56,7 +56,7 @@ export default function GeneratePage() {
         audioData = await extractAudio(file);
       }
 
-      setStep('transcribing');
+      updateStep('transcribing');
       setPercent(0);
       await initBasicPitch((p) => setPercent(p));
       const rawNotes = await transcribe(audioData, (p) => setPercent(p));
@@ -66,12 +66,12 @@ export default function GeneratePage() {
       }
       setPercent(100);
 
-      setStep('arranging');
+      updateStep('arranging');
       setPercent(50);
       const scores = generateAllDifficulties(rawNotes, title, sourceType);
       setPercent(100);
 
-      setStep('rendering');
+      updateStep('rendering');
       setPercent(100);
 
       dispatch({ type: 'SET_SCORE', payload: scores.medium });
