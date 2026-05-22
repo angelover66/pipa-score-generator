@@ -2,6 +2,7 @@
 import { useRouter } from 'next/navigation';
 import { useAppState } from '@/store/AppContext';
 import { validateFile } from '@/audio/ffmpegExtractor';
+import { storeFile } from '@/utils/fileStorage';
 import InkAnimation from './InkAnimation';
 import UploadZone from './UploadZone';
 import PresetQuickSelect from './PresetQuickSelect';
@@ -11,15 +12,14 @@ export default function HeroSection() {
   const router = useRouter();
   const { state, dispatch } = useAppState();
 
-  function handleFile(file: File) {
+  async function handleFile(file: File) {
     const result = validateFile(file);
     if (!result.valid) {
       dispatch({ type: 'SET_ERROR', payload: result.error ?? null });
       return;
     }
     sessionStorage.setItem('pending-file-name', file.name);
-    const url = URL.createObjectURL(file);
-    sessionStorage.setItem('pending-file-url', url);
+    await storeFile('pending-upload', file);
     router.push('/generate');
   }
 

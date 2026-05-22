@@ -7,6 +7,7 @@ import { initBasicPitch, transcribe, validateHasMelody } from '@/audio/basicPitc
 import { generateAllDifficulties } from '@/engine/arrangement';
 import { Difficulty, ScoreData } from '@/engine/types';
 import ProgressIndicator from '@/components/generate/ProgressIndicator';
+import { retrieveFile, removeFile } from '@/utils/fileStorage';
 import { presets } from '@/data/presets';
 
 export default function GeneratePage() {
@@ -39,14 +40,13 @@ export default function GeneratePage() {
         const buffer = await resp.arrayBuffer();
         audioData = new Float32Array(buffer);
       } else {
-        const fileUrl = sessionStorage.getItem('pending-file-url');
         const fileName = sessionStorage.getItem('pending-file-name') || '未命名曲目';
-        if (!fileUrl) throw new Error('未找到上传文件');
+        const stored = await retrieveFile('pending-upload');
+        if (!stored) throw new Error('未找到上传文件，请重新上传');
         title = fileName.replace(/\.[^.]+$/, '');
         sourceType = 'upload';
-        const resp = await fetch(fileUrl);
-        const blob = await resp.blob();
-        const file = new File([blob], fileName);
+        const file = new File([stored.buffer], stored.name || fileName, { type: stored.type });
+        await removeFile('pending-upload');
         audioData = await extractAudio(file);
       }
 
