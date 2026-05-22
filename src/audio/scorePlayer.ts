@@ -47,11 +47,12 @@ export class ScorePlayer {
     this.scheduledNodes = [];
     const beatDuration = 60 / this.tempo / 4;
     let timeOffset = 0;
+    let skippedCount = 0;
     for (let m = 0; m < this.score.measures.length; m++) {
       for (let n = 0; n < this.score.measures[m].notes.length; n++) {
         const note = this.score.measures[m].notes[n];
         const sample = getSample(note.pitch);
-        if (!sample) continue;
+        if (!sample) { skippedCount++; continue; }
         const source = ctx.createBufferSource();
         source.buffer = sample;
         const gainNode = ctx.createGain();
@@ -64,6 +65,9 @@ export class ScorePlayer {
         this.scheduledNodes.push(source);
         timeOffset += note.duration * beatDuration;
       }
+    }
+    if (skippedCount > 0) {
+      console.warn('[ScorePlayer] %d 个音符因超出音域范围 (MIDI 40-96) 被跳过播放', skippedCount);
     }
   }
 

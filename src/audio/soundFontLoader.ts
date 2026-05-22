@@ -11,7 +11,7 @@ function getAudioContext(): AudioContext {
 export async function loadPipaSamples(onProgress?: (percent: number) => void): Promise<void> {
   if (sampleCache.size > 0) return;
   const ctx = getAudioContext();
-  const midiRange = { min: 50, max: 86 };
+  const midiRange = { min: 40, max: 96 };
   const totalNotes = midiRange.max - midiRange.min + 1;
 
   for (let midi = midiRange.min; midi <= midiRange.max; midi++) {
@@ -40,7 +40,7 @@ export async function loadPipaSamples(onProgress?: (percent: number) => void): P
 }
 
 export function getSample(midiNote: number): AudioBuffer | undefined {
-  const clamped = Math.max(50, Math.min(86, midiNote));
+  const clamped = Math.max(40, Math.min(96, midiNote));
   return sampleCache.get(clamped);
 }
 

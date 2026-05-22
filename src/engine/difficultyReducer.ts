@@ -33,8 +33,13 @@ export function reduceDifficulty(rawNotes: RawNote[], difficulty: Difficulty, te
 
 function reduceEasy(notes: PipaNote[]): PipaNote[] {
   return notes
-    .filter((n) => n.isStrongBeat)
-    .filter((n, i, arr) => i === 0 || n.pitch !== arr[i - 1].pitch)
+    // 保留强拍 + 每第 4 个弱拍音符（保留旋律轮廓）
+    .filter((n, i, arr) => {
+      if (n.isStrongBeat) return true;
+      // 弱拍上每隔 3 个保留一个，且音高与前后不同
+      return i % 4 === 0 && (i === 0 || arr[i - 1].pitch !== n.pitch);
+    })
+    // 节奏量化到八分音符
     .map((n) => ({
       ...n,
       duration: Math.max(Math.round(n.duration * 2) / 2, 0.5),
@@ -42,8 +47,17 @@ function reduceEasy(notes: PipaNote[]): PipaNote[] {
 }
 
 function reduceMedium(notes: PipaNote[]): PipaNote[] {
-  const filtered = notes.filter((n) => n.duration >= 0.25);
-  return filtered.filter((n, i) => n.isStrongBeat || (i > 0 && filtered[i - 1].isStrongBeat));
+  return notes
+    // 仅过滤极短音符（32 分音符以下）
+    .filter((n) => n.duration >= 0.125)
+    // 保留强拍 + 弱拍上音高变化明显的音符
+    .filter((n, i, arr) => {
+      if (n.isStrongBeat) return true;
+      if (i > 0 && Math.abs(n.pitch - arr[i - 1].pitch) >= 3) return true;
+      if (i < arr.length - 1 && Math.abs(n.pitch - arr[i + 1].pitch) >= 3) return true;
+      // 每隔一个弱拍保留一个
+      return i % 2 === 0;
+    });
 }
 
 export function adjustTempo(originalTempo: number, difficulty: Difficulty): number {

@@ -15,7 +15,9 @@ function estimateTempo(rawNotes: RawNote[]): number {
   }
   intervals.sort((a, b) => a - b);
   const medianInterval = intervals[Math.floor(intervals.length / 2)];
-  return Math.round(60 / (medianInterval * 4));
+  // 中位间隔通常对应八分音符（2个/拍），而非十六分音符
+  const bpm = Math.round(60 / (medianInterval * 2));
+  return Math.max(40, Math.min(200, bpm));
 }
 
 function groupIntoMeasures(notes: PipaNote[]): import('./types').Measure[] {
