@@ -1,11 +1,11 @@
 'use client';
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAppState } from '@/store/AppContext';
 import { initFFmpeg, extractAudio } from '@/audio/ffmpegExtractor';
 import { initBasicPitch, transcribe, validateHasMelody } from '@/audio/basicPitchTranscriber';
 import { generateAllDifficulties } from '@/engine/arrangement';
-import { Difficulty, ScoreData } from '@/engine/types';
+import { Difficulty, ScoreData, ProcessingStep } from '@/engine/types';
 import ProgressIndicator from '@/components/generate/ProgressIndicator';
 import { retrieveFile, removeFile } from '@/utils/fileStorage';
 import { presets } from '@/data/presets';
@@ -13,15 +13,21 @@ import { presets } from '@/data/presets';
 export default function GeneratePage() {
   const router = useRouter();
   const { dispatch } = useAppState();
-  const [processingStep, setProcessingStep] = useState<'extracting' | 'transcribing' | 'arranging' | 'rendering'>('extracting');
+  const [processingStep, setProcessingStep] = useState<ProcessingStep>('extracting');
+  const stepRef = useRef<ProcessingStep>('extracting');
+  const setStep = (step: ProcessingStep) => {
+    stepRef.current = step;
+    setStep(step);
+  };
   const [percent, setPercent] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  const [errorStep, setErrorStep] = useState<ProcessingStep | null>(null);
 
   const process = useCallback(async () => {
     try {
       dispatch({ type: 'SET_STEP', payload: 'processing' });
 
-      setProcessingStep('extracting');
+      setStep('extracting');
       setPercent(0);
       await initFFmpeg((p) => setPercent(p));
       setPercent(100);
@@ -50,7 +56,7 @@ export default function GeneratePage() {
         audioData = await extractAudio(file);
       }
 
-      setProcessingStep('transcribing');
+      setStep('transcribing');
       setPercent(0);
       await initBasicPitch((p) => setPercent(p));
       const rawNotes = await transcribe(audioData, (p) => setPercent(p));
@@ -60,12 +66,12 @@ export default function GeneratePage() {
       }
       setPercent(100);
 
-      setProcessingStep('arranging');
+      setStep('arranging');
       setPercent(50);
       const scores = generateAllDifficulties(rawNotes, title, sourceType);
       setPercent(100);
 
-      setProcessingStep('rendering');
+      setStep('rendering');
       setPercent(100);
 
       dispatch({ type: 'SET_SCORE', payload: scores.medium });
@@ -75,20 +81,43 @@ export default function GeneratePage() {
 
       router.push(`/score/${scores.medium.id}`);
     } catch (err: any) {
-      const msg = err?.message || '处理失败';
-      setError(msg);
-      dispatch({ type: 'SET_ERROR', payload: msg });
+      console.error('[GeneratePage] 处理失败', {
+        step: stepRef.current,
+        message: err?.message,
+        name: err?.name,
+        stack: err?.stack,
+        raw: err,
+      });
+      const detail = err?.message || String(err) || '处理失败';
+      setErrorStep(stepRef.current);
+      setError(detail);
+      dispatch({ type: 'SET_ERROR', payload: detail });
     }
   }, [dispatch, router]);
 
   useEffect(() => { process(); }, [process]);
 
+  const stepLabels: Record<ProcessingStep, string> = {
+    extracting: '音频提取',
+    transcribing: '旋律识别',
+    arranging: '简谱生成',
+    rendering: '谱面渲染',
+  };
+
   if (error) {
     return (
       <div className="max-w-md mx-auto py-20 text-center">
         <div className="text-6xl mb-6">😞</div>
-        <h2 className="text-xl text-ink font-bold mb-4">处理失败</h2>
-        <p className="text-ink-light mb-6">{error}</p>
+        <h2 className="text-xl text-ink font-bold mb-2">处理失败</h2>
+        {errorStep && (
+          <p className="text-sm text-vermilion mb-1">失败阶段：{stepLabels[errorStep]}</p>
+        )}
+        <p className="text-ink-light mb-4">{error}</p>
+        <p className="text-xs text-ink-faded mb-6 bg-rice-dark rounded-lg p-3 text-left leading-relaxed">
+          提示：按 <code className="bg-ink/10 px-1 rounded">F12</code> 打开开发者工具，
+          切换到 <code className="bg-ink/10 px-1 rounded">Console</code> 面板，
+          可以看到完整错误堆栈。
+        </p>
         <button onClick={() => router.push('/')} className="px-6 py-2 bg-vermilion text-white rounded-lg hover:bg-vermilion-dark transition-colors">
           重新开始
         </button>
