@@ -1,26 +1,51 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&display=swap');
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  /* 古风配色：墨色、宣纸、朱砂、玉色、金色 */
+  --color-ink: #2c1810;
+  --color-ink-light: #4a3728;
+  --color-ink-faded: #8a7a6e;
+  --color-rice: #f5f0e8;
+  --color-rice-light: #faf7f0;
+  --color-rice-dark: #e8e0d0;
+  --color-vermilion: #c41e3a;
+  --color-vermilion-light: #d44a5a;
+  --color-jade: #2e8b57;
+  --color-jade-light: #4aad75;
+  --color-gold: #b8860b;
+  --color-gold-light: #d4a020;
+  --font-serif: 'Noto Serif SC', serif;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* 水墨动画 */
+@keyframes ink-spread {
+  0% { transform: scale(0.8); opacity: 0; }
+  50% { opacity: 0.3; }
+  100% { transform: scale(1.5); opacity: 0; }
 }
 
+@keyframes ink-drip {
+  0% { transform: translateY(-20px); opacity: 0; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes scroll-unroll {
+  0% { clip-path: inset(0 100% 0 0); }
+  100% { clip-path: inset(0 0 0 0); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+.animate-ink-spread { animation: ink-spread 3s ease-out infinite; }
+.animate-ink-drip { animation: ink-drip 0.8s ease-out; }
+.animate-scroll-unroll { animation: scroll-unroll 1.2s ease-out; }
+.animate-float { animation: float 6s ease-in-out infinite; }
+
+/* Base body style */
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  @apply bg-rice-light text-ink font-serif;
 }
