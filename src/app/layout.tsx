@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { AppProvider } from '@/store/AppContext';
+import ErrorBoundary from '@/components/ErrorBoundary';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 import './globals.css';
@@ -13,13 +14,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="zh-CN">
       <body>
-        <AppProvider>
-          <div className="min-h-screen flex flex-col">
-            <Navbar />
-            <main className="flex-1">{children}</main>
-            <Footer />
-          </div>
-        </AppProvider>
+        <ErrorBoundary>
+          <AppProvider>
+            <div className="min-h-screen flex flex-col">
+              <Navbar />
+              <main className="flex-1">{children}</main>
+              <Footer />
+            </div>
+          </AppProvider>
+        </ErrorBoundary>
       </body>
     </html>
   );
